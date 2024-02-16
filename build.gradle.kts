@@ -6,7 +6,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.1.3")
+        classpath("com.android.tools.build:gradle:8.2.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10")
         classpath(libs.hiltPlugin)
     }
@@ -22,5 +22,5 @@ allprojects {
 extra["compileSdkVersion"] = 34
 extra["targetSdkVersion"] = 34
 extra["minSdkVersion"] = 21
-extra["versionCode"] = 22
-extra["versionName"] = "3.1"
+extra["versionCode"] = 23
+extra["versionName"] = "3.1.1"
