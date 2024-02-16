@@ -26,19 +26,20 @@ env:
   #  alias: ${{ secrets.ANDROID_ALIAS }}
   #  keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
   #  keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}  
+  BUILD_TOOLS_VERSION: "34.0.0"
 
 jobs:
 #  validation:
 #    runs-on: ubuntu-latest
 #    steps:
-#      - uses: actions/checkout@v3
+#      - uses: actions/checkout@v4
 #      - uses: gradle/wrapper-validation-action@v1
 
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: deep-soft/checkout@v3
+        uses: deep-soft/checkout@v4
 
       - name: Get ref, set build version
         shell: bash
@@ -79,22 +80,26 @@ jobs:
 
       - name: Publish src archive
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}-${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
             ${{ env.ASSET_SRC }}
 
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-      - uses: gradle/gradle-build-action@v2
-      - run: ./gradlew assembleRelease
+
+      - name: gradle build (v3)
+        uses: deep-soft/gradle-build-action@v3
+
+      - name: gradle  Assemble Release
+        run: ./gradlew assembleRelease
 
       - name: Upload Artifact
-        uses: deep-soft/upload-artifact@v3
+        uses: deep-soft/upload-artifact@v4
         with:
           name: upload-artifact
           path: |
@@ -114,7 +119,7 @@ jobs:
           echo "LIST: " ${{ env.PRG_NAME }}-${{ env.PRG_VERSION }}-release.apk
           ls -l ./signed-apk/
 
-      - uses: deep-soft/sign-android-release@master
+      - uses: deep-soft/sign-android-release@v1
         name: Sign app APK
         if: env.ANDROID_SIGNING_KEY != null
         id: sign-FreeOTP
@@ -126,18 +131,18 @@ jobs:
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
         env:
           # override default build-tools version (29.0.3) -- optional
-          BUILD_TOOLS_VERSION: "30.0.2"
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOLS_VERSION }}
 
       - name: Upload Artifacts
         if: env.ANDROID_SIGNING_KEY != null
-        uses: deep-soft/upload-artifact@v3
+        uses: deep-soft/upload-artifact@v4
         with:
           name: ${{ env.PRG_NAME }}-${{ env.PRG_VERSION }}-release-signed.apk
           path: ${{steps.sign-FreeOTP.outputs.signedReleaseFile}}
 
       - name: Publish signed apk package
         if: env.ANDROID_SIGNING_KEY != null
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -147,7 +152,7 @@ jobs:
 
       - name: Publish version build - signed apk package
         if: env.ANDROID_SIGNING_KEY != null
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}-${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
@@ -157,7 +162,7 @@ jobs:
 
       - name: Publish unsigned apk package
         if: env.ANDROID_SIGNING_KEY == null
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
